@@ -1,12 +1,60 @@
-touch:
-    description: "Touch a file on the VNF."
-    params:
-        filename:
-            description: "The name of the file to touch."
-            type: string
-            default: ""
-    required:
-        - filename
+# Magma AGW Actions
+add-net:
+  description: "Add AGW Network if needed"
+  params:
+    orch_ip:
+      description: "Orchestrator IP"
+      type: "string"
+      default: ""
+    orch_net:
+      description: "Orchestrator Network"
+      type: "string"
+      default: ""
+add-gw:
+  description: "Self-register for the AGW"
+  params:
+    agw_id:
+      description: "AGW ID"
+      type: "string"
+      default: ""
+    agw_name:
+      description: "AGW NAME"
+      type: "string"
+      default: ""
+    orch_ip:
+      description: "Orchestrator IP"
+      type: "string"
+      default: ""
+    orch_net:
+      description: "Orchestrator Network"
+      type: "string"
+      default: ""
+reset-id:
+  description: "Resets the hardware ID"
+add-hosts:
+  description: "Add Orchestrator host in /etc/hosts"
+  params:
+    orch_id:
+      description: "Orchestrator ID"
+      type: "string"
+      default: ""
+restart-magma:
+  description: "Restarts Magma services"
+del-gw:
+  description: "Deregister for AGW"
+  params:
+    agw_id:
+      description: "AGW ID"
+      type: "string"
+      default: ""
+    orch_ip:
+      description: "Orchestrator IP"
+      type: "string"
+      default: ""
+    orch_net:
+      description: "Orchestrator Network"
+      type: "string"
+      default: ""
 
 # Standard OSM functions
 start:
@@ -22,17 +70,17 @@ upgrade:
 
 # Required by charms.osm.sshproxy
 run:
-    description: "Run an arbitrary command"
-    params:
-        command:
-            description: "The command to execute."
-            type: string
-            default: ""
-    required:
-        - command
+  description: "Run an arbitrary command"
+  params:
+    command:
+      description: "The command to execute."
+      type: string
+      default: ""
+  required:
+    - command
 generate-ssh-key:
-    description: "Generate a new SSH keypair for this unit. This will replace any existing previously generated keypair."
+  description: "Generate a new SSH keypair for this unit. This will replace any existing previously generated keypair."
 verify-ssh-credentials:
-    description: "Verify that this unit can authenticate with server specified by ssh-hostname and ssh-username."
+  description: "Verify that this unit can authenticate with server specified by ssh-hostname and ssh-username."
 get-ssh-public-key:
-    description: "Get the public SSH key for this unit."
+  description: "Get the public SSH key for this unit."

@@ -66,8 +66,14 @@ class SimpleHAProxyCharm(CharmBase):
             self.on.install,
             self.on.start,
             self.on.upgrade_charm,
-            # Charm actions (primitives)
-            self.on.touch_action,
+            # Charm actions (primitives) <-- MAGMA AGW
+            self.on.add_net_action,
+            self.on.add_gw_action,
+            self.on.reset_id_action,
+            self.on.add_hosts_action,
+            self.on.restart_magma_action,
+            self.on.del_gw_action,
+            self.on.reset_id_action,
             # OSM actions (primitives)
             self.on.start_action,
             self.on.stop_action,
@@ -146,14 +152,89 @@ class SimpleHAProxyCharm(CharmBase):
             else:
                 unit.status = WaitingStatus("Waiting for leader to populate the keys")
 
-    def on_touch_action(self, event):
-        """Touch a file."""
-
+    # Magma AGW Action implementation
+    def on_add_net_action(self, event):
+        """Add AGW Network if needed"""
         if self.is_leader:
-            filename = event.params["filename"]
+            orch_ip = event.params["orch_ip"]
+            orch_net = event.params["orch_net"]
             proxy = self.get_ssh_proxy()
-            stdout, stderr = proxy.run("touch {}".format(filename))
-            event.set_results({"output": stdout})
+            stdout, stderr = proxy.run(
+                "/home/magma/addnet.py --orch_ip {} --orch_net {}".format(
+                    orch_ip, orch_net
+                )
+            )
+            event.set_results({"output": stdout, "stderr": stderr})
+        else:
+            event.fail("Unit is not leader")
+            return
+
+    def on_add_gw_action(self, event):
+        """Self-register for the AGW"""
+        if self.is_leader:
+            agw_id = event.params["agw_id"]
+            agw_name = event.params["agw_name"]
+            orch_ip = event.params["orch_ip"]
+            orch_net = event.params["orch_net"]
+            proxy = self.get_ssh_proxy()
+            stdout, stderr = proxy.run(
+                "/home/magma/addgw.py --agw_id {} --agw_name {} --orch_ip {} --orch_net {}".format(
+                    agw_id, agw_name, orch_ip, orch_net
+                )
+            )
+            event.set_results({"output": stdout, "stderr": stderr})
+        else:
+            event.fail("Unit is not leader")
+            return
+
+    def on_reset_id_action(self, event):
+        """Resets the hardware ID"""
+        if self.is_leader:
+            proxy = self.get_ssh_proxy()
+            stdout, stderr = proxy.run("sudo snowflake --force-new-key")
+            event.set_results({"output": stdout, "stderr": stderr})
+        else:
+            event.fail("Unit is not leader")
+            return
+
+    def on_add_hosts_action(self, event):
+        """Add Orchestrator host in /etc/hosts"""
+        if self.is_leader:
+            orch_ip = event.params["orch_ip"]
+            orch_hosts = "ORCH_IP controller.magma.test\nORCH_IP bootstrapper-controller.magma.test\nORCH_IP state-controller.magma.test\nORCH_IP dispatcher-controller.magma.test\nORCH_IP logger-controller.magma.test\nORCH_IP streamer-controller.magma.test\n"
+            orch_hosts = orch_hosts.replace("ORCH_IP", orch_ip)
+            proxy = self.get_ssh_proxy()
+            stdout, stderr = proxy.run(
+                "echo -e {} | sudo tee -a /etc/hosts".format(orch_hosts)
+            )
+            event.set_results({"output": stdout, "stderr": stderr})
+        else:
+            event.fail("Unit is not leader")
+            return
+
+    def on_restart_magma_action(self, event):
+        """Resets the hardware ID"""
+        if self.is_leader:
+            proxy = self.get_ssh_proxy()
+            stdout, stderr = proxy.run("sudo service magma@* restart")
+            event.set_results({"output": stdout, "stderr": stderr})
+        else:
+            event.fail("Unit is not leader")
+            return
+
+    def on_del_gw_action(self, event):
+        """Deregister from AGW"""
+        if self.is_leader:
+            agw_id = event.params["agw_id"]
+            orch_ip = event.params["orch_ip"]
+            orch_net = event.params["orch_net"]
+            proxy = self.get_ssh_proxy()
+            stdout, stderr = proxy.run(
+                "/home/magma/delgw.py --agw_id {} --orch_ip {} --orch_net {}".format(
+                    agw_id, orch_ip, orch_net
+                )
+            )
+            event.set_results({"output": stdout, "stderr": stderr})
         else:
             event.fail("Unit is not leader")
             return

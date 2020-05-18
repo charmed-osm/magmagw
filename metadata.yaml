@@ -1,10 +1,12 @@
-name: simple-ha-proxy
-summary: A simple example proxy charm
+name: magmagw
+summary: Charm for Magma AGW
+maintainer: David García <david.garcia@canonical.com>
 description: |
-    Simple proxy charm is an example charm used in OSM Hackfests
+    Charm for Magma AGW (version 1.0.0 with extra tools)
 series:
-- xenial
 - bionic
+- xenial
+# Needed for proxy charm in HA
 peers:
   proxypeer:
     interface: proxypeer
